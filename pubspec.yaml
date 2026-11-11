@@ -1,0 +1,12 @@
+name: inkcanvas_device_tests
+description: Device-test harness for InkCanvas (private app).
+publish_to: none
+environment:
+  sdk: ^3.13.7
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
