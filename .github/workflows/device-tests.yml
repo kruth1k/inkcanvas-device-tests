@@ -1,17 +1,25 @@
 name: InkCanvas device tests
 on:
   workflow_dispatch:
-    inputs:
-      artifact_run_id:
-        description: Private-repo run id that produced the app-debug-apk artifact
-        required: true
 permissions:
   contents: read
 jobs:
   device:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # APK_URL is an environment secret: environment secrets are read at job
+    # start (not at queue), so the short-lived artifact URL is minted after
+    # dispatch. It is an artifact-specific expiring URL, not an account token.
+    environment: exp
     steps:
+      - name: Download debug APK via expiring artifact URL
+        env:
+          APK_URL: ${{ secrets.APK_URL }}
+        run: |
+          curl -sSf -o app-debug.apk.zip "$APK_URL" || { echo 'APK download failed (expired or invalid URL)'; exit 1; }
+          unzip -q app-debug.apk.zip
+          rm app-debug.apk.zip
+          ls -la app-debug.apk
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
@@ -19,12 +27,6 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Download debug APK from the private repo (read-only token)
-        env:
-          GH_TOKEN: ${{ secrets.INKCANVAS_READ_TOKEN }}
-        run: |
-          gh run download "${{ inputs.artifact_run_id }}" -R kruth1k/inkcanvas -n app-debug-apk
-          ls -la app-debug.apk
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -46,4 +48,4 @@ jobs:
             adb shell wm size 1280x800
             adb shell wm density 160
             timeout 420 flutter drive --use-application-binary=app-debug.apk --driver=test_driver/integration_test.dart --target=integration_test/tablet_test.dart -d emulator-5554 --keep-app-running --timeout=360
-      # Intentionally no artifact uploads: logs stay in the run, nothing is published.
+      # No artifact uploads: nothing is published from this repo.
