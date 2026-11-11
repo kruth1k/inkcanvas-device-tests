@@ -7,10 +7,8 @@ jobs:
   device:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    # APK_URL is an environment secret: environment secrets are read at job
-    # start (not at queue), so the short-lived artifact URL is minted after
-    # dispatch. It is an artifact-specific expiring URL, not an account token.
-    environment: exp
+    # APK_URL is a repo secret set immediately before dispatch: an
+    # artifact-specific expiring URL, not an account token.
     steps:
       - name: Download debug APK via expiring artifact URL
         env:
