@@ -10,6 +10,7 @@ jobs:
     # APK_URL is a repo secret set immediately before dispatch: an
     # artifact-specific expiring URL, not an account token.
     steps:
+      - uses: actions/checkout@v4
       - name: Download debug APK via expiring artifact URL
         env:
           APK_URL: ${{ secrets.APK_URL }}
@@ -18,7 +19,6 @@ jobs:
           unzip -q app-debug.apk.zip
           rm app-debug.apk.zip
           ls -la app-debug.apk
-      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.9'
